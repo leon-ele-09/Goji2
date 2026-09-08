@@ -1,0 +1,6 @@
+@GojiApi_HostAddress = http://localhost:5077
+
+GET {{GojiApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
