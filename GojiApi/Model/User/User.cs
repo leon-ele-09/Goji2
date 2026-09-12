@@ -7,7 +7,7 @@ namespace GojiApi.Model.User
         public Guid Id { get; private set; }
         public string Name { get; set; }
         public string Email { get; set; } = null!;
-        public string PasswordHash { get; set; } = null!;
+        // public string PasswordHash { get; set; } = null!;
         public bool Active { get; set; }
         public DateTime? CreatedAt { get; private set; }
 
@@ -23,15 +23,20 @@ namespace GojiApi.Model.User
 
         public User WithEmail(string email)
         {
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@')) { throw new ArgumentException("Invalid Email"); }
+                
+
             Email = email;
             return this;
         }
 
+        /*
         public User WithPasswordHash(string passwordHash)
         {
             PasswordHash = passwordHash;
             return this;
         }
+        */
 
         public User Activate() { Active = true; return this; }
 
