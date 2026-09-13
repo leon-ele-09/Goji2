@@ -21,10 +21,17 @@ namespace GojiApi.Model.User
             Active = true
         };
 
+        public User WithName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentException("Invalid Name"); }
+
+            Name = name;
+            return this;
+        }
+
         public User WithEmail(string email)
         {
-            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@')) { throw new ArgumentException("Invalid Email"); }
-                
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@')) { throw new ArgumentException("Invalid Email"); }  
 
             Email = email;
             return this;

@@ -1,6 +1,6 @@
 ﻿namespace GojiApi.Model.User
 {
-    public interface IUserRepository
+    public interface IUser
     {
         void Add(User user);
         User GetById(Guid id);
