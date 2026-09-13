@@ -3,31 +3,41 @@
     public class TaskItem
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
+        public Guid ProjectId { get; set; }
         public Guid AssigneeId { get; set; }
-        public string Description { get; set; }
-        public string Status { get; set; }
-        public string Priority { get; set; }
+        public string? Description { get; set; }
+        public string? Status { get; set; }
+        public string? Priority { get; set; }
         public DateTime? CreatedAt { get; private set; }
 
         public static TaskItem Create(string name) => new TaskItem
         {
-            Name = name,
             Id = Guid.NewGuid(),
             CreatedAt = DateTime.UtcNow
         };
 
+        public TaskItem WithName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentException("Invalid Name"); }
+
+            Name = name;
+            return this;
+        }
+        
+        public TaskItem WithProject(Guid Id)
+        {
+            ProjectId = Id;
+            return this;
+        }
+        
         public TaskItem WithAssignee(Guid Id)
         {
             AssigneeId = Id;
             return this;
         }
 
-        public TaskItem WithName(string name)
-        {
-            Name = name; 
-            return this;
-        }
+        
 
         public TaskItem WithDescription(string description)
         {
