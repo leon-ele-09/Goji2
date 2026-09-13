@@ -17,13 +17,11 @@
             CreatedAt = DateTime.UtcNow
         };
 
-        /* COMMENTED UNTIL MERGE WITH USER
-        public Task WithAssignee(User user)
+        public TaskItem WithAssignee(Guid Id)
         {
-            AssigneeId = user.Id;
+            AssigneeId = Id;
             return this;
         }
-        */
 
         public TaskItem WithName(string name)
         {
