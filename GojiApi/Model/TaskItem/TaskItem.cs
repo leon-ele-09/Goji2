@@ -57,7 +57,7 @@
 
         public TaskItem WithDescription(string description)
         {
-            if (string.IsNullOrWhiteSpace(description)) { throw new ArgumentException("Invalid Email"); }
+            if (string.IsNullOrWhiteSpace(description)) { throw new ArgumentException("Invalid Description"); }
 
             Description = description;
             return this;
