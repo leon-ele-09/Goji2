@@ -7,7 +7,7 @@ namespace GojiApi.Model.User
         public Guid Id { get; private set; }
         public string? Name { get; set; }
         public string? Email { get; set; } = null!;
-        // public string PasswordHash { get; set; } = null!;
+        // public string PasswordHash { get; set; } = null!; ya que le metamos autenticacion
         public bool Active { get; set; }
         public DateTime? CreatedAt { get; private set; }
 
@@ -16,7 +16,17 @@ namespace GojiApi.Model.User
             Id = Guid.NewGuid(),
             CreatedAt = DateTime.UtcNow,
             Active = true
-        };
+        }.WithName(name);
+
+        internal static User Hydrate(Guid id, string name, string email, bool active, DateTime createdAt) =>
+            new User
+            {
+                Id = id,
+                Name = name,
+                Email = email,
+                Active = active,
+                CreatedAt = createdAt
+            };
 
         public User WithName(string name)
         {

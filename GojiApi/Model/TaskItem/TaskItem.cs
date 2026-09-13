@@ -15,7 +15,23 @@
         {
             Id = Guid.NewGuid(),
             CreatedAt = DateTime.UtcNow
-        };
+        }.WithName(name);
+
+
+        internal static TaskItem Hydrate(
+            Guid id, string name, Guid projectId, Guid assigneeId,
+            string? description, string? status, string? priority, DateTime createdAt) =>
+            new TaskItem
+            {
+                Id = id,
+                Name = name,
+                ProjectId = projectId,
+                AssigneeId = assigneeId,
+                Description = description,
+                Status = status,
+                Priority = priority,
+                CreatedAt = createdAt
+            };
 
         public TaskItem WithName(string name)
         {
@@ -53,7 +69,7 @@
         {
             if (string.IsNullOrWhiteSpace(status) || !allowedStatus.Contains(status, StringComparer.OrdinalIgnoreCase)) { throw new ArgumentException("Invalid Status"); }
 
-            Description = status;
+            Status = status;
             return this;
         }
 
@@ -61,19 +77,12 @@
 
         public TaskItem WithPriority(string priority)
         {
-            if (string.IsNullOrWhiteSpace(priority) || !allowedPriority.Contains(priority, StringComparer.OrdinalIgnoreCase)) { throw new ArgumentException("Invalid Status"); }
+            if (string.IsNullOrWhiteSpace(priority) || !allowedPriority.Contains(priority, StringComparer.OrdinalIgnoreCase)) { throw new ArgumentException("Invalid Priority"); }
 
-            Description = priority;
+            Priority = priority;
             return this;
         }
 
 
-        /* Uso
-         * 
-         * Task task = Task.Create()
-         * 
-         * task
-         *  .AssignUser(15);
-         */
     }
 }
