@@ -31,8 +31,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Delegate\" />
     <Folder Include="Api\" />
+    <Folder Include="Repository\" />
   </ItemGroup>
 
 </Project>
