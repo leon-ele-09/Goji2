@@ -2,7 +2,7 @@
 {
     public class TaskItem
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; }
         public string? Name { get; set; }
         public Guid ProjectId { get; set; }
         public Guid AssigneeId { get; set; }

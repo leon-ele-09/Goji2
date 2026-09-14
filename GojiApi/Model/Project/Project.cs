@@ -2,7 +2,7 @@
 {
     public class Project
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; }
         public string? BusinessKey { get; set; }
         public string? Name { get; set; }
         public List<Guid> UserIds { get; set; } = new();
@@ -11,7 +11,7 @@
         public static Project Create() => new Project
         {
             Id = Guid.NewGuid(),
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         // esto es para como reconstruir otras cosas
         internal static Project Hydrate(Guid id, string name, string? businessKey, List<Guid> userIds, DateTime createdAt) =>
