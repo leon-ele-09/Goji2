@@ -1,4 +1,4 @@
-# Goji2 : Electric Boogaloo
+# Goji^2 : Electric Boogaloo
 
 *Ultima actualización 14 de Septiembre
 
