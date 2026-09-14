@@ -31,7 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Domain\" />
     <Folder Include="Delegate\" />
     <Folder Include="Api\" />
     <Folder Include="Repository\" />
