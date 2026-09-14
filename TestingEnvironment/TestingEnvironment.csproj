@@ -34,7 +34,6 @@
     <Folder Include="Domain\" />
     <Folder Include="Delegate\" />
     <Folder Include="Api\" />
-    <Folder Include="TestCommon\" />
     <Folder Include="Repository\" />
   </ItemGroup>
 
