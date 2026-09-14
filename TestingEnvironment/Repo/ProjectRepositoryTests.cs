@@ -1,6 +1,7 @@
 ﻿using GojiApi.Data;
 using GojiApi.Model.Project;
 using GojiApi.Repository;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 
@@ -38,6 +39,7 @@ namespace TestingEnvironment.Repo
         [TearDown]
         public void TearDown()
         {
+            SqliteConnection.ClearAllPools();
             if (File.Exists(_databasePath))
                 File.Delete(_databasePath);
         }

@@ -14,7 +14,7 @@
             CreatedAt = DateTime.UtcNow
         };
         // esto es para como reconstruir otras cosas
-        internal static Project Hydrate(Guid id, string name, string? businessKey, List<Guid> userIds, DateTime createdAt) =>
+        public static Project Hydrate(Guid id, string name, string? businessKey, List<Guid> userIds, DateTime createdAt) =>
             new Project
             {
                 Id = id,
