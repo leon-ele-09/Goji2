@@ -1,45 +1,45 @@
 using GojiApi.Delegate;
 using GojiApi.Dtos;
-using Microsoft.AspNetCore.Mvc;
 
-namespace GojiApi.Controllers
+namespace GojiApi.Endpoints
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class UsersController : ControllerBase
+    public static class UsersEndpoints
     {
-        private readonly IUserDelegate _userDelegate;
-
-        public UsersController(IUserDelegate userDelegate)
+        public static IEndpointRouteBuilder MapUsersEndpoints(this IEndpointRouteBuilder app)
         {
-            _userDelegate = userDelegate;
+            var group = app.MapGroup("/users").WithTags("Users");
+
+            // POST /users
+            group.MapPost("/", Create);
+
+            // GET /users/{id}
+            group.MapGet("/{id:guid}", GetById)
+                 .WithName("GetUserById");
+
+            return app;
         }
 
-        // POST /users
-        [HttpPost]
-        public ActionResult<UserResponse> Create([FromBody] CreateUserRequest request)
+        private static IResult Create(CreateUserRequest request, IUserDelegate userDelegate)
         {
             try
             {
-                var user = _userDelegate.RegisterUser(request.Name, request.Email);
-                return CreatedAtAction(nameof(GetById), new { id = user.Id }, UserResponse.From(user));
+                var user = userDelegate.RegisterUser(request.Name, request.Email);
+                return Results.CreatedAtRoute("GetUserById", new { id = user.Id }, UserResponse.From(user));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = ex.Message });
             }
             catch (DelegateException ex)
             {
-                return ex.ToActionResult();
+                return ex.ToResult();
             }
         }
 
-        // GET /users/{id}
-        [HttpGet("{id:guid}")]
-        public ActionResult<UserResponse> GetById(Guid id)
+        private static IResult GetById(Guid id, IUserDelegate userDelegate)
         {
-            var user = _userDelegate.GetUser(id);
-            return user is null ? NotFound() : UserResponse.From(user);
+            var user = userDelegate.GetUser(id);
+            return user is null ? Results.NotFound() : Results.Ok(UserResponse.From(user));
         }
     }
 }

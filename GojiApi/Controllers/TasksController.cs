@@ -1,64 +1,65 @@
 using GojiApi.Delegate;
 using GojiApi.Dtos;
-using Microsoft.AspNetCore.Mvc;
 
-namespace GojiApi.Controllers
+namespace GojiApi.Endpoints
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class TasksController : ControllerBase
+    public static class TasksEndpoints
     {
-        private readonly ITaskDelegate _taskDelegate;
-
-        public TasksController(ITaskDelegate taskDelegate)
+        public static IEndpointRouteBuilder MapTasksEndpoints(this IEndpointRouteBuilder app)
         {
-            _taskDelegate = taskDelegate;
+            var group = app.MapGroup("/tasks").WithTags("Tasks");
+
+            // POST /tasks
+            // Crea una tarea dentro de un proyecto y la asigna
+            group.MapPost("/", Create);
+
+            // GET /tasks/{id}
+            group.MapGet("/{id:guid}", GetById)
+                 .WithName("GetTaskById");
+
+            // GET /tasks?projectId=...&assigneeId=...
+            // basicamente son las tareas de Y usuarios para X proyectos
+            group.MapGet("/", GetMany);
+
+            return app;
         }
 
-        // POST /tasks
-        // Crea una tarea dentro de un proyecto y la asigna
-        [HttpPost]
-        public ActionResult<TaskResponse> Create([FromBody] CreateTaskRequest request)
+        private static IResult Create(CreateTaskRequest request, ITaskDelegate taskDelegate)
         {
             try
             {
-                var task = _taskDelegate.CreateTask(
+                var task = taskDelegate.CreateTask(
                     request.Name, request.ProjectId, request.AssigneeId,
                     request.Description, request.Status, request.Priority);
 
-                return CreatedAtAction(nameof(GetById), new { id = task.Id }, TaskResponse.From(task));
+                return Results.CreatedAtRoute("GetTaskById", new { id = task.Id }, TaskResponse.From(task));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = ex.Message });
             }
             catch (DelegateException ex)
             {
-                return ex.ToActionResult();
+                return ex.ToResult();
             }
         }
 
-        // GET /tasks/{id}
-        [HttpGet("{id:guid}")]
-        public ActionResult<TaskResponse> GetById(Guid id)
+        private static IResult GetById(Guid id, ITaskDelegate taskDelegate)
         {
-            var task = _taskDelegate.GetTask(id);
-            return task is null ? NotFound() : TaskResponse.From(task);
+            var task = taskDelegate.GetTask(id);
+            return task is null ? Results.NotFound() : Results.Ok(TaskResponse.From(task));
         }
 
-        // GET /tasks?projectId=...&assigneeId=...
-        // basicamente son las tareas de Y usuarios para X proyectos
-        [HttpGet]
-        public ActionResult<IEnumerable<TaskResponse>> GetMany([FromQuery] Guid? projectId, [FromQuery] Guid? assigneeId)
+        private static IResult GetMany(Guid? projectId, Guid? assigneeId, ITaskDelegate taskDelegate)
         {
             try
             {
-                var results = _taskDelegate.GetTasks(projectId, assigneeId);
-                return Ok(results.Select(TaskResponse.From));
+                var results = taskDelegate.GetTasks(projectId, assigneeId);
+                return Results.Ok(results.Select(TaskResponse.From));
             }
             catch (DelegateException ex)
             {
-                return ex.ToActionResult();
+                return ex.ToResult();
             }
         }
     }

@@ -1,5 +1,6 @@
 namespace GojiApi.Dtos
 {
+    // redundancia @_q p
     public record CreateTaskRequest(
         string Name,
         Guid ProjectId,

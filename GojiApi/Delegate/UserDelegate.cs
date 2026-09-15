@@ -15,7 +15,7 @@ namespace GojiApi.Delegate
         {
          
             var user = User.Create(name).WithEmail(email);
-            
+            // usar constraints en la DB para que cheque con el error y no jalando los datos en si
             if(_users.GetByName(user.Name!) is not null)
             {
                 throw new ConflictException($"Alguien mas tiene este username : '{user.Name}'");

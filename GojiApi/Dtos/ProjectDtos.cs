@@ -4,6 +4,7 @@ namespace GojiApi.Dtos
 
     public record AddUserToProjectRequest(Guid RequestingUserId, Guid UserIdToAdd);
 
+    // queda redundante pq usa lo mismo que el proyecto
     public record ProjectResponse(Guid Id, string Name, string? BusinessKey, List<Guid> UserIds, DateTime? CreatedAt)
     {
         public static ProjectResponse From(Model.Project.Project project) =>

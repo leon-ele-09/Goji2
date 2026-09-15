@@ -1,61 +1,62 @@
 using GojiApi.Delegate;
 using GojiApi.Dtos;
-using Microsoft.AspNetCore.Mvc;
 
-namespace GojiApi.Controllers
+namespace GojiApi.Endpoints
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class ProjectsController : ControllerBase
+    public static class ProjectsEndpoints
     {
-        private readonly IProjectDelegate _projectDelegate;
-
-        public ProjectsController(IProjectDelegate projectDelegate)
+        public static IEndpointRouteBuilder MapProjectsEndpoints(this IEndpointRouteBuilder app)
         {
-            _projectDelegate = projectDelegate;
+            var group = app.MapGroup("/projects").WithTags("Projects");
+
+            // POST /projects
+            // Crea proyectos
+            group.MapPost("/", Create);
+
+            // GET /projects/{id}
+            group.MapGet("/{id:guid}", GetById)
+                 .WithName("GetProjectById");
+
+            // POST /projects/{id}/users
+            // Mete usuarios al proyecto.
+            group.MapPost("/{id:guid}/users", AddUser);
+
+            return app;
         }
 
-        // POST /projects
-        // Crea proyectos
-        [HttpPost]
-        public ActionResult<ProjectResponse> Create([FromBody] CreateProjectRequest request)
+        private static IResult Create(CreateProjectRequest request, IProjectDelegate projectDelegate)
         {
             try
             {
-                var project = _projectDelegate.CreateProject(request.Name, request.BusinessKey, request.OwnerUserId);
-                return CreatedAtAction(nameof(GetById), new { id = project.Id }, ProjectResponse.From(project));
+                var project = projectDelegate.CreateProject(request.Name, request.BusinessKey, request.OwnerUserId);
+                return Results.CreatedAtRoute("GetProjectById", new { id = project.Id }, ProjectResponse.From(project));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = ex.Message });
             }
             catch (DelegateException ex)
             {
-                return ex.ToActionResult();
+                return ex.ToResult();
             }
         }
 
-        // GET /projects/{id}
-        [HttpGet("{id:guid}")]
-        public ActionResult<ProjectResponse> GetById(Guid id)
+        private static IResult GetById(Guid id, IProjectDelegate projectDelegate)
         {
-            var project = _projectDelegate.GetProject(id);
-            return project is null ? NotFound() : ProjectResponse.From(project);
+            var project = projectDelegate.GetProject(id);
+            return project is null ? Results.NotFound() : Results.Ok(ProjectResponse.From(project));
         }
 
-        // POST /projects/{id}/users
-        // Mete usuarios al proyecto.
-        [HttpPost("{id:guid}/users")]
-        public ActionResult<ProjectResponse> AddUser(Guid id, [FromBody] AddUserToProjectRequest request)
+        private static IResult AddUser(Guid id, AddUserToProjectRequest request, IProjectDelegate projectDelegate)
         {
             try
             {
-                var project = _projectDelegate.AddUserToProject(id, request.RequestingUserId, request.UserIdToAdd);
-                return ProjectResponse.From(project);
+                var project = projectDelegate.AddUserToProject(id, request.RequestingUserId, request.UserIdToAdd);
+                return Results.Ok(ProjectResponse.From(project));
             }
             catch (DelegateException ex)
             {
-                return ex.ToActionResult();
+                return ex.ToResult();
             }
         }
     }

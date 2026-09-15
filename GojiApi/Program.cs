@@ -1,10 +1,11 @@
 using GojiApi.Data;
 using GojiApi.Delegate;
+using GojiApi.Delegate;
+using GojiApi.Endpoints;
 using GojiApi.Model.Project;
 using GojiApi.Model.TaskItem;
 using GojiApi.Model.User;
 using GojiApi.Repository;
-using GojiApi.Delegate;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,11 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapControllers();
+//app.MapControllers();
+
+app.MapProjectsEndpoints();
+app.MapTasksEndpoints();
+app.MapUsersEndpoints();
+
 
 app.Run();
