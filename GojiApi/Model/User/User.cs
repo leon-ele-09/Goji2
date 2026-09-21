@@ -18,7 +18,7 @@ namespace GojiApi.Model.User
             Active = true
         }.WithName(name);
 
-        internal static User Hydrate(Guid id, string name, string email, bool active, DateTime createdAt) =>
+        public static User Hydrate(Guid id, string name, string email, bool active, DateTime createdAt) =>
             new User
             {
                 Id = id,

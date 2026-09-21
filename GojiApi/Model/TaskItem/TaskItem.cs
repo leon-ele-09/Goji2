@@ -18,7 +18,7 @@
         }.WithName(name);
 
 
-        internal static TaskItem Hydrate(
+        public static TaskItem Hydrate(
             Guid id, string name, Guid projectId, Guid assigneeId,
             string? description, string? status, string? priority, DateTime createdAt) =>
             new TaskItem
