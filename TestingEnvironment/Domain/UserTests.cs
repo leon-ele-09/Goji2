@@ -72,6 +72,7 @@ namespace TestingEnvironment.Domain
         [TestCase("")]
         [TestCase("  ")]
         [TestCase("Hola_Brodi")]
+        [TestCase("Jefferson_Gutierritos")]
         public void WithEmail_InvalidEmail_ThrowsArgumentException(string? invalidEmail)
         {
             var user = new UserBuilder().Build();
