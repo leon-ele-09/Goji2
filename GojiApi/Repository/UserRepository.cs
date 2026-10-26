@@ -1,14 +1,14 @@
 using GojiApi.Data;
 using GojiApi.Model.User;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 
 namespace GojiApi.Repository
 {
     public class UserRepository : IUser
     {
-        private readonly SqliteConnectionFactory _factory;
+        private readonly PostgresConnectionFactory _factory;
 
-        public UserRepository(SqliteConnectionFactory factory)
+        public UserRepository(PostgresConnectionFactory factory)
         {
             _factory = factory;
         }
@@ -21,14 +21,14 @@ namespace GojiApi.Repository
             command.CommandText =
                 """
                 INSERT INTO Users (Id, Name, Email, Active, CreatedAt)
-                VALUES ($id, $name, $email, $active, $createdAt);
+                VALUES (@id, @name, @email, @active, @createdAt);
                 """;
 
-            command.Parameters.AddWithValue("$id", user.Id.ToString());
-            command.Parameters.AddWithValue("$name", user.Name ?? string.Empty);
-            command.Parameters.AddWithValue("$email", user.Email ?? string.Empty);
-            command.Parameters.AddWithValue("$active", user.Active ? 1 : 0);
-            command.Parameters.AddWithValue("$createdAt", (user.CreatedAt ?? DateTime.UtcNow).ToString("O"));
+            command.Parameters.AddWithValue("id", user.Id);
+            command.Parameters.AddWithValue("name", user.Name ?? string.Empty);
+            command.Parameters.AddWithValue("email", user.Email ?? string.Empty);
+            command.Parameters.AddWithValue("active", user.Active);
+            command.Parameters.AddWithValue("createdAt", user.CreatedAt ?? DateTime.UtcNow);
 
             command.ExecuteNonQuery();
         }
@@ -37,8 +37,8 @@ namespace GojiApi.Repository
         {
             using var connection = _factory.CreateOpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "SELECT Id, Name, Email, Active, CreatedAt FROM Users WHERE Id = $id;";
-            command.Parameters.AddWithValue("$id", id.ToString());
+            command.CommandText = "SELECT Id, Name, Email, Active, CreatedAt FROM Users WHERE Id = @id;";
+            command.Parameters.AddWithValue("id", id);
 
             using var reader = command.ExecuteReader();
             return reader.Read() ? Map(reader) : null;
@@ -48,8 +48,8 @@ namespace GojiApi.Repository
         {
             using var connection = _factory.CreateOpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "SELECT Id, Name, Email, Active, CreatedAt FROM Users WHERE Name = $name LIMIT 1;";
-            command.Parameters.AddWithValue("$name", name);
+            command.CommandText = "SELECT Id, Name, Email, Active, CreatedAt FROM Users WHERE Name = @name LIMIT 1;";
+            command.Parameters.AddWithValue("name", name);
 
             using var reader = command.ExecuteReader();
             return reader.Read() ? Map(reader) : null;
@@ -59,8 +59,8 @@ namespace GojiApi.Repository
         {
             using var connection = _factory.CreateOpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "SELECT Id, Name, Email, Active, CreatedAt FROM Users WHERE Email = $email LIMIT 1;";
-            command.Parameters.AddWithValue("$email", email);
+            command.CommandText = "SELECT Id, Name, Email, Active, CreatedAt FROM Users WHERE Email = @email LIMIT 1;";
+            command.Parameters.AddWithValue("email", email);
 
             using var reader = command.ExecuteReader();
             return reader.Read() ? Map(reader) : null;
@@ -74,14 +74,14 @@ namespace GojiApi.Repository
             command.CommandText =
                 """
                 UPDATE Users
-                SET Name = $name, Email = $email, Active = $active
-                WHERE Id = $id;
+                SET Name = @name, Email = @email, Active = @active
+                WHERE Id = @id;
                 """;
 
-            command.Parameters.AddWithValue("$id", user.Id.ToString());
-            command.Parameters.AddWithValue("$name", user.Name ?? string.Empty);
-            command.Parameters.AddWithValue("$email", user.Email ?? string.Empty);
-            command.Parameters.AddWithValue("$active", user.Active ? 1 : 0);
+            command.Parameters.AddWithValue("id", user.Id);
+            command.Parameters.AddWithValue("name", user.Name ?? string.Empty);
+            command.Parameters.AddWithValue("email", user.Email ?? string.Empty);
+            command.Parameters.AddWithValue("active", user.Active);
 
             command.ExecuteNonQuery();
         }
@@ -90,17 +90,17 @@ namespace GojiApi.Repository
         {
             using var connection = _factory.CreateOpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "DELETE FROM Users WHERE Id = $id;";
-            command.Parameters.AddWithValue("$id", user.Id.ToString());
+            command.CommandText = "DELETE FROM Users WHERE Id = @id;";
+            command.Parameters.AddWithValue("id", user.Id);
             command.ExecuteNonQuery();
         }
 
-        private static User Map(SqliteDataReader reader) =>
+        private static User Map(NpgsqlDataReader reader) =>
             User.Hydrate(
-                id: Guid.Parse(reader.GetString(0)),
+                id: reader.GetGuid(0),
                 name: reader.GetString(1),
                 email: reader.GetString(2),
-                active: reader.GetInt32(3) == 1,
-                createdAt: DateTime.Parse(reader.GetString(4)));
+                active: reader.GetBoolean(3),
+                createdAt: reader.GetDateTime(4));
     }
 }
