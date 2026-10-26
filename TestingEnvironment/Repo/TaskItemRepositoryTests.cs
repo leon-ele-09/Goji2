@@ -1,9 +1,7 @@
-﻿using GojiApi.Data;
-using GojiApi.Model.TaskItem;
+﻿using GojiApi.Model.TaskItem;
 using GojiApi.Repository;
-using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
+using TestingEnvironment.TestCommon;
 
 namespace TestingEnvironment.Repo
 {
@@ -11,59 +9,32 @@ namespace TestingEnvironment.Repo
     public class TaskItemRepositoryTests
     {
         private TaskItemRepository _repository = null!;
-        private SqliteConnectionFactory _factory = null!;
-        private string _databasePath = null!;
+        private PostgresTestDatabase _database = null!;
 
         [SetUp]
         public void Setup()
         {
-            _databasePath = Path.Combine(
-                Path.GetTempPath(),
-                $"goji_test_{Guid.NewGuid()}.db"
-            );
+            _database = new PostgresTestDatabase(
+                """
+                CREATE TABLE TaskItems (
+                    Id UUID PRIMARY KEY,
+                    Name TEXT NOT NULL,
+                    ProjectId UUID NOT NULL,
+                    AssigneeId UUID NOT NULL,
+                    Description TEXT,
+                    Status TEXT,
+                    Priority TEXT,
+                    CreatedAt TIMESTAMPTZ NOT NULL
+                );
+                """);
 
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Sqlite"] =
-                        $"Data Source={_databasePath}"
-                }).Build();
-
-            _factory = new SqliteConnectionFactory(configuration);
-
-            CreateDatabase();
-
-            _repository = new TaskItemRepository(_factory);
+            _repository = new TaskItemRepository(_database.Factory);
         }
 
         [TearDown]
         public void TearDown()
         {
-            SqliteConnection.ClearAllPools();
-            if (File.Exists(_databasePath))
-                File.Delete(_databasePath);
-        }
-
-        private void CreateDatabase()
-        {
-            using var connection = _factory.CreateOpenConnection();
-            using var command = connection.CreateCommand();
-
-            command.CommandText =
-                """
-                CREATE TABLE TaskItems (
-                    Id TEXT PRIMARY KEY,
-                    Name TEXT NOT NULL,
-                    ProjectId TEXT NOT NULL,
-                    AssigneeId TEXT NOT NULL,
-                    Description TEXT,
-                    Status TEXT,
-                    Priority TEXT, 
-                    CreatedAt TEXT NOT NULL
-                );
-                """;
-
-            command.ExecuteNonQuery();
+            _database.Dispose();
         }
 
         [Test]
