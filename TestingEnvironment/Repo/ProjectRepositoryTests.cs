@@ -1,9 +1,7 @@
-﻿using GojiApi.Data;
-using GojiApi.Model.Project;
+﻿using GojiApi.Model.Project;
 using GojiApi.Repository;
-using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
+using TestingEnvironment.TestCommon;
 
 namespace TestingEnvironment.Repo
 {
@@ -11,61 +9,34 @@ namespace TestingEnvironment.Repo
     public class ProjectRepositoryTests
     {
         private ProjectRepository _repository = null!;
-        private SqliteConnectionFactory _factory = null!;
-        private string _databasePath = null!;
+        private PostgresTestDatabase _database = null!;
 
         [SetUp]
         public void Setup()
         {
-            _databasePath = Path.Combine(
-                Path.GetTempPath(),
-                $"goji_test_{Guid.NewGuid()}.db"
-            );
+            _database = new PostgresTestDatabase(
+                """
+                CREATE TABLE Projects (
+                    Id UUID PRIMARY KEY,
+                    BusinessKey TEXT,
+                    Name TEXT NOT NULL,
+                    CreatedAt TIMESTAMPTZ NOT NULL
+                );
 
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Sqlite"] =
-                        $"Data Source={_databasePath}"
-                }).Build();
+                CREATE TABLE ProjectUsers (
+                    ProjectId UUID NOT NULL,
+                    UserId UUID NOT NULL,
+                    PRIMARY KEY (ProjectId, UserId)
+                );
+                """);
 
-            _factory = new SqliteConnectionFactory(configuration);
-
-            CreateDatabase();
-
-            _repository = new ProjectRepository(_factory);
+            _repository = new ProjectRepository(_database.Factory);
         }
 
         [TearDown]
         public void TearDown()
         {
-            SqliteConnection.ClearAllPools();
-            if (File.Exists(_databasePath))
-                File.Delete(_databasePath);
-        }
-
-        private void CreateDatabase()
-        {
-            using var connection = _factory.CreateOpenConnection();
-            using var command = connection.CreateCommand();
-
-            command.CommandText =
-                """
-                CREATE TABLE Projects (
-                    Id TEXT PRIMARY KEY,
-                    BusinessKey TEXT,
-                    Name TEXT NOT NULL,
-                    CreatedAt TEXT NOT NULL
-                );
-
-                CREATE TABLE ProjectUsers (
-                    ProjectId TEXT NOT NULL,
-                    UserId TEXT NOT NULL,
-                    PRIMARY KEY (ProjectId, UserId)
-                );
-                """;
-
-            command.ExecuteNonQuery();
+            _database.Dispose();
         }
 
         [Test]
@@ -79,7 +50,7 @@ namespace TestingEnvironment.Repo
                 name: "Test Project",
                 businessKey: "TEST-001",
                 userIds: new List<Guid>(),
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             // Act
@@ -116,7 +87,7 @@ namespace TestingEnvironment.Repo
                 name: "My Project",
                 businessKey: "PROJECT-001",
                 userIds: new List<Guid>(),
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             _repository.Add(project);
@@ -149,7 +120,7 @@ namespace TestingEnvironment.Repo
                 name: "My Project",
                 businessKey: "BUS-123",
                 userIds: new List<Guid>(),
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             _repository.Add(project);
@@ -172,7 +143,7 @@ namespace TestingEnvironment.Repo
                 name: "Original Name",
                 businessKey: "ORIGINAL",
                 userIds: new List<Guid>(),
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             _repository.Add(project);
@@ -200,7 +171,7 @@ namespace TestingEnvironment.Repo
                 name: "Project To Delete",
                 businessKey: "DELETE-001",
                 userIds: new List<Guid>(),
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             _repository.Add(project);
@@ -230,7 +201,7 @@ namespace TestingEnvironment.Repo
                     user1,
                     user2
                 },
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             // Act
@@ -260,7 +231,7 @@ namespace TestingEnvironment.Repo
                 {
                     oldUser
                 },
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             _repository.Add(project);

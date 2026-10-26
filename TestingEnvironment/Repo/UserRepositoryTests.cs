@@ -1,10 +1,7 @@
-﻿using GojiApi.Data;
-using GojiApi.Model.TaskItem;
-using GojiApi.Model.User;
+﻿using GojiApi.Model.User;
 using GojiApi.Repository;
-using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
+using TestingEnvironment.TestCommon;
 
 namespace TestingEnvironment.Repo
 {
@@ -12,56 +9,29 @@ namespace TestingEnvironment.Repo
     public class UserRepositoryTests
     {
         private UserRepository _repository = null!;
-        private SqliteConnectionFactory _factory = null!;
-        private string _databasePath = null!;
+        private PostgresTestDatabase _database = null!;
 
         [SetUp]
         public void Setup()
         {
-            _databasePath = Path.Combine(
-                Path.GetTempPath(),
-                $"goji_test_{Guid.NewGuid()}.db"
-            );
+            _database = new PostgresTestDatabase(
+                """
+                CREATE TABLE Users (
+                    Id UUID PRIMARY KEY,
+                    Name TEXT NOT NULL,
+                    Email TEXT NOT NULL,
+                    Active BOOLEAN NOT NULL,
+                    CreatedAt TIMESTAMPTZ NOT NULL
+                );
+                """);
 
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Sqlite"] =
-                        $"Data Source={_databasePath}"
-                }).Build();
-
-            _factory = new SqliteConnectionFactory(configuration);
-
-            CreateDatabase();
-
-            _repository = new UserRepository(_factory);
+            _repository = new UserRepository(_database.Factory);
         }
 
         [TearDown]
         public void TearDown()
         {
-            SqliteConnection.ClearAllPools();
-            if (File.Exists(_databasePath))
-                File.Delete(_databasePath);
-        }
-
-        private void CreateDatabase()
-        {
-            using var connection = _factory.CreateOpenConnection();
-            using var command = connection.CreateCommand();
-
-            command.CommandText =
-                """
-                CREATE TABLE Users (
-                    Id TEXT PRIMARY KEY,
-                    Name TEXT NOT NULL,
-                    Email TEXT NOT NULL, 
-                    Active BOOL NOT NULL,
-                    CreatedAt TEXT NOT NULL
-                );
-                """;
-
-            command.ExecuteNonQuery();
+            _database.Dispose();
         }
 
         [Test]
@@ -73,7 +43,7 @@ namespace TestingEnvironment.Repo
                 name: "Test User",
                 email: "Test email",
                 active: true,
-                createdAt: DateTime.Now
+                createdAt: DateTime.UtcNow
             );
 
             // Act
@@ -87,7 +57,8 @@ namespace TestingEnvironment.Repo
             Assert.That(result.Name, Is.EqualTo(user.Name));
             Assert.That(result.Email, Is.EqualTo(user.Email));
             Assert.That(result.Active, Is.EqualTo(user.Active));
-            Assert.That(result.CreatedAt, Is.EqualTo(user.CreatedAt));
+            // Postgres guarda microsegundos, por eso la tolerancia
+            Assert.That(result.CreatedAt, Is.EqualTo(user.CreatedAt).Within(TimeSpan.FromMilliseconds(1)));
         }
 
         [Test]
@@ -188,7 +159,7 @@ namespace TestingEnvironment.Repo
                 name: "Updated Name",
                 email: "updated@email.com",
                 active: false,
-                createdAt: (DateTime)user.CreatedAt
+                createdAt: (DateTime)user.CreatedAt!
             );
 
             // Act

@@ -6,6 +6,7 @@ using GojiApi.Model.Project;
 using GojiApi.Model.TaskItem;
 using GojiApi.Model.User;
 using GojiApi.Repository;
+using GojiApi.Model.Alarm;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,18 +16,19 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddSingleton<SqliteConnectionFactory>();
+builder.Services.AddSingleton<PostgresConnectionFactory>();
 builder.Services.AddScoped<IUser, UserRepository>();
 builder.Services.AddScoped<IProject, ProjectRepository>();
 builder.Services.AddScoped<ITaskItem, TaskItemRepository>();
+builder.Services.AddScoped<IAlarm, AlarmRepository>();
 builder.Services.AddScoped<IUserDelegate, UserDelegate>();
 builder.Services.AddScoped<IProjectDelegate, ProjectDelegate>();
 builder.Services.AddScoped<ITaskDelegate, TaskDelegate>();
-
+builder.Services.AddScoped<IAlarmDelegate, AlarmDelegate>();
 
 var app = builder.Build();
 
-DbInitializer.Initialize(app.Services.GetRequiredService<SqliteConnectionFactory>());
+DbInitializer.Initialize(app.Services.GetRequiredService<PostgresConnectionFactory>());
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -47,6 +49,6 @@ app.UseAuthorization();
 app.MapProjectsEndpoints();
 app.MapTasksEndpoints();
 app.MapUsersEndpoints();
-
+app.MapAlarmsEndpoints();
 
 app.Run();
